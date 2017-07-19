@@ -1,8 +1,8 @@
 Every Android application should adhere to the multithreaded programming model built-in to the Java language. With multithreading comes improvements to performance and responsiveness that is required for a great user experience, but it is accompanied with increased complexities:
 
-*  Handling the concurrent programming model in Java.
-*  Keeping data consistency in a multithreaded environment.
-*  Setting up task execution strategies.
+* Handling the concurrent programming model in Java.
+* Keeping data consistency in a multithreaded environment.
+* Setting up task execution strategies.
 
 ## Thread Basics {#_thread_basics}
 
@@ -13,39 +13,17 @@ Software programming is all about instructing the hardware to perform an action�
 A thread in an Android application is represented by `java.lang.Thread`. It is the most basic execution environment in Android, that executes tasks when it starts and terminates when the task is finished or there are no more tasks to execute; the alive time of the thread is determined by the length of the task. `Thread` supports execution of tasks that are implementions of the `java.lang.Runnable` interface. An implementation defines the task in the `run` method:
 
 ```java
-private
-class
-MyTask
-implements
-Runnable
-{
-public
-void
-run
-()
-{
-int
-i
-=
-0
-;
-// Stored on the thread local stack.
-}
+private class MyTask implements Runnable {
+        public void run (){
+                int i = 0 ; // Stored on the thread local stack.
+        }
 }
 ```
 
 All the local variables in the method calls from within a `run()` method–direct or indirect—will be stored on the local memory stack of the thread. The task’s execution is started by instantiating and starting a `Thread`:
 
 ```
-Thread
-myThread
-=
-new
-Thread
-(
-new
-MyTask
-());
+Thread myThread = new Thread(new MyTask());
 myThread
 .
 start
@@ -67,7 +45,7 @@ setPriority
 
 If, however, the scheduling is only priority-based the low-priority threads may not get enough processing time carry out the job it was intended for—known as _starvation_. Hence, schedulers also take the processing time of the threads into account when changing to a new thread. A thread change is known as _context switch_. A context switch starts by storing the state of the executing thread—so that the execution can be resumed at a later point—whereafter that thread has to wait. The scheduler then restores another waiting thread for processing.
 
-Two concurrently running threads—executed by a single processor—are split into execution intervals as [Figure 2-1](https://www.safaribooksonline.com/library/view/efficient-android-threading/9781449364120/ch02.html#fig_parallelism) shows.
+Two concurrently running threads—executed by a single processor—are split into execution intervals as [Figure 2-1](https://www.safaribooksonline.com/library/view/efficient-android-threading/9781449364120/ch02.html#fig_parallelism) shows.
 
 ```
 Thread
@@ -97,12 +75,10 @@ T2
 start
 ();
 ```
-
-
 
 ![](https://www.safaribooksonline.com/library/view/efficient-android-threading/9781449364120/images/chapter02/parallelism.png "Parallelism.")
 
-Figure 2-1. Two threads executing on one CPU
+Figure 2-1. Two threads executing on one CPU
 
 Every scheduling point includes a context switch, where the operating system has to use the CPU to carry out the switch. One such context switch is noted as C in the figure.
 
@@ -228,38 +204,36 @@ If a shared resource is accessible from multiple threads and the state is mutabl
 
 In short, locks guarantee atomic execution of the regions they lock. Locking mechanisms in Android include:
 
-*  Object intrinsic lock
+* Object intrinsic lock
 
-  *  The 
+  * The 
     `synchronized`
-     keyword
+    keyword
 
-*  Explicit locks
+* Explicit locks
 
   * `java.util.concurrent.locks.ReentrantLock`
   * `java.util.concurrent.locks.ReentrantReadWriteLock`
 
 ### Intrinsic Lock and Java Monitor {#section_synchronized}
 
-The `synchronized` keyword operates on the intrinsic lock that is implicitly available in every Java object. The intrinsic lock is mutually exclusive, meaning that thread execution in the critical section is exclusive to one thread. Other threads that try to access a critical region—while being occupied—are blocked and can not continue executing until the lock has been released. The intrinsic lock acts as a _monitor_, see [Figure 2-2](https://www.safaribooksonline.com/library/view/efficient-android-threading/9781449364120/ch02.html#fig_java_monitor). The Java monitor can be modeled with three states:
+The `synchronized` keyword operates on the intrinsic lock that is implicitly available in every Java object. The intrinsic lock is mutually exclusive, meaning that thread execution in the critical section is exclusive to one thread. Other threads that try to access a critical region—while being occupied—are blocked and can not continue executing until the lock has been released. The intrinsic lock acts as a _monitor_, see [Figure 2-2](https://www.safaribooksonline.com/library/view/efficient-android-threading/9781449364120/ch02.html#fig_java_monitor). The Java monitor can be modeled with three states:
 
 **Blocked**
 
- Threads that are suspended, while they wait for the monitor to released by another thread.
+Threads that are suspended, while they wait for the monitor to released by another thread.
 
 **Executing**
 
- The one and only thread that owns the monitor, and is currently running the code in the critical section.
+The one and only thread that owns the monitor, and is currently running the code in the critical section.
 
 **Waiting**
 
- Threads that voluntarely has given up ownership of the monitor before it has reached the end of the critical section. The threads are waiting to be signalled before they can take ownership again.
-
-
+Threads that voluntarely has given up ownership of the monitor before it has reached the end of the critical section. The threads are waiting to be signalled before they can take ownership again.
 
 ![](https://www.safaribooksonline.com/library/view/efficient-android-threading/9781449364120/images/chapter02/java_monitor.png "Java monitor")
 
-Figure 2-2. Java monitor
+Figure 2-2. Java monitor
 
 Threads transition between the monitor states when it reaches and executes a code block protected by the intrinsic lock:
 
@@ -282,10 +256,16 @@ Threads transition between the monitor states when it reaches and executes a cod
 
 The transitions map to a synchronized code block accordingly:
 
-synchronized \(this\) { 1  
-    // Execute code 2  
-    wait\(\);3  
-    // Execute code 4  
+synchronized \(this\) { 1
+
+```
+// Execute code 2
+
+wait\(\);3
+
+// Execute code 4
+```
+
 }
 
 ### Synchronize Access to Shared Resources {#_synchronize_access_to_shared_resources}
@@ -296,7 +276,7 @@ A shared mutable state that can be accessed and altered by multiple threads requ
 
 An intrinsic lock can guard a shared mutable state in different ways. The synchronization strategy is about the intrinsic lock itself can differ depending on how the keyword `synchronized` is used:
 
-**Method-level that operates on the intrinsic lock of the enclosing object instance**. +
+**Method-level that operates on the intrinsic lock of the enclosing object instance**. +
 
 ```
 synchronized
@@ -309,7 +289,7 @@ sharedResource
 }
 ```
 
-**Block-level that operates on the intrinsic lock of the enclosing object instance**. +
+**Block-level that operates on the intrinsic lock of the enclosing object instance**. +
 
 ```
 void
@@ -327,7 +307,7 @@ sharedResource
 }
 ```
 
-**Block-level with other objects intrinsic lock**. +
+**Block-level with other objects intrinsic lock**. +
 
 ```
 private
@@ -353,7 +333,7 @@ sharedResource
 }
 ```
 
-**Method-level that operates on the intrinsic lock of the enclosing class instance**. +
+**Method-level that operates on the intrinsic lock of the enclosing class instance**. +
 
 ```
 synchronized
@@ -367,7 +347,7 @@ staticSharedResource
 }
 ```
 
-**Block-level that operates on the intrinsic lock of the enclosing class instance**. +
+**Block-level that operates on the intrinsic lock of the enclosing class instance**. +
 
 ```
 static
@@ -742,11 +722,11 @@ To make sure that multiple threads are used properly to create responsive applic
 
 One thread for all tasks
 
- All tasks are executed on the same thread. The result is often an unresponsive application that fails to use available processors.
+All tasks are executed on the same thread. The result is often an unresponsive application that fails to use available processors.
 
 One thread per task
 
- Tasks are always executed on a new thread that is started and terminated for every task. If the tasks are frequently created, with short lifetimes, the overhead of thread creation and teardown can degrade performance.
+Tasks are always executed on a new thread that is started and terminated for every task. If the tasks are frequently created, with short lifetimes, the overhead of thread creation and teardown can degrade performance.
 
 Although these extremes should be avoided, they both represent variants of sequential and concurrent execution at the extreme.
 
@@ -754,15 +734,15 @@ Sequential execution
 
 Tasks are executed in a sequence that requires one task to finish before the next is processed. Thus, the execution interval of the tasks does not overlap. Advantages of this design are:
 
-*  It is inherently thread-safe.
-*  Can be executed on one thread, which consumes less memory than multiple threads.
+* It is inherently thread-safe.
+* Can be executed on one thread, which consumes less memory than multiple threads.
 
 Disadvantages include:
 
-*  Low throughput.
-*  The start of each task’s execution depends on previously executed tasks. The start may either be delayed or possibly not executed at all.
+* Low throughput.
+* The start of each task’s execution depends on previously executed tasks. The start may either be delayed or possibly not executed at all.
 
-  Concurrent execution
+  Concurrent execution  
   Task are executed in parallel and interleaved. The advantage is better CPU-utilization, whereas the disadvantage is that the design is not inherently thread-safe, so synchronization may be required.
 
 An effective multi-threaded design utilizes execution environments with both sequential and concurrent execution; the choice depends on the tasks. Isolated and independent tasks can execute concurrently to increase throughput, but tasks that require an ordering or share a common resource without synchronization should be executed sequentially.
@@ -771,8 +751,8 @@ An effective multi-threaded design utilizes execution environments with both seq
 
 Concurrent execution can be implemented in many ways, so design has to consider how to manage the number of executing threads and their relationships. Basic principles include:
 
-*  Favor reuse of threads, instead of always creating new threads, so that the number of times the creation and teardown of resources can be reduced.
-*  Do not use more threads than required. The more threads that are used, the more memory and processor time is consumed.
+* Favor reuse of threads, instead of always creating new threads, so that the number of times the creation and teardown of resources can be reduced.
+* Do not use more threads than required. The more threads that are used, the more memory and processor time is consumed.
 
 ## Summary {#_summary_2}
 
